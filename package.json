@@ -1,0 +1,23 @@
+{
+  "name": "wanderingwizards",
+  "version": "1.0.0",
+  "description": "Twitch Chat Integrated Maze Game built with MaayaInsane!",
+  "main": "index.js",
+  "dependencies": {
+    "webwebweb": "^1.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/instafluff/WanderingWizards.git"
+  },
+  "author": "Instafluff,MaayaInsane",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/instafluff/WanderingWizards/issues"
+  },
+  "homepage": "https://github.com/instafluff/WanderingWizards#readme"
+}
