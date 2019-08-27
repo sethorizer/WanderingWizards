@@ -4,166 +4,26 @@
     <link href="https://fonts.googleapis.com/css?family=Bubblegum+Sans" rel="stylesheet">
     <link rel='stylesheet' href='unicorn.css' />
     <script src="/web/pinkfluffyunicorn.min.js"></script>
+    <script src="/web/maze.js"></script>
   </head>
   <body>
     <div id="unicorn-display"></div>
     <script>
-      function findTheWay( grid, gridWidth, gridHeight, x, y, gX, gY, paths = [], travelDist = 0, discoveredMinDist = 999999 ) {
-        // console.log( x, y, travelDist );
-        if( travelDist > discoveredMinDist ) {
-          return null;
-        }
-        // console.log( x, y, grid );
-        if( x === gX && y === gY ) {
-          return paths.concat( { x, y } );
-        }
-        if( x < 0 || x >= gridWidth ||
-            y < 0 || y >= gridHeight ) {
-          return null;
-        }
-        if( grid[ y * gridWidth + x ] > 0 ) {
-          return null;
-        }
-        var gridCopy = grid.slice();
-        gridCopy[ y * gridWidth + x ] = 2;
-        // // North, East, South, West
-        // var north = findTheWay( gridCopy, gridWidth, gridHeight, x, y - 1, gX, gY, paths.concat( { x, y } ) );
-        // var east = findTheWay( gridCopy, gridWidth, gridHeight, x + 1, y, gX, gY, paths.concat( { x, y } ) );
-        // var south = findTheWay( gridCopy, gridWidth, gridHeight, x, y + 1, gX, gY, paths.concat( { x, y } ) );
-        // var west = findTheWay( gridCopy, gridWidth, gridHeight, x - 1, y, gX, gY, paths.concat( { x, y } ) );
-        //
-        // // Figure out minimum valid path length
-        // var minPath = north;
-        // if( east ) {
-        //   if( !minPath ) { minPath = east; }
-        //   else if( east.length < minPath.length ) {
-        //     minPath = east;
-        //   }
-        // }
-        // if( south ) {
-        //   if( !minPath ) { minPath = south; }
-        //   else if( south.length < minPath.length ) {
-        //     minPath = south;
-        //   }
-        // }
-        // if( west ) {
-        //   if( !minPath ) { minPath = west; }
-        //   else if( west.length < minPath.length ) {
-        //     minPath = west;
-        //   }
-        // }
-        // return minPath;
-
-        // OPTIMIZED VERSION!
-        // North, East, South, West
-        var north = findTheWay( gridCopy, gridWidth, gridHeight, x, y - 1, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-        if( north && north.length < discoveredMinDist ) { discoveredMinDist = north.length; }
-        var east = findTheWay( gridCopy, gridWidth, gridHeight, x + 1, y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-        if( east && east.length < discoveredMinDist ) { discoveredMinDist = east.length; }
-        var south = findTheWay( gridCopy, gridWidth, gridHeight, x, y + 1, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-        if( south && south.length < discoveredMinDist ) { discoveredMinDist = south.length; }
-        var west = findTheWay( gridCopy, gridWidth, gridHeight, x - 1, y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-
-        // Figure out minimum valid path length
-        var minPath = north;
-        if( east ) {
-          if( !minPath ) { minPath = east; }
-          else if( east.length < minPath.length ) {
-            minPath = east;
-          }
-        }
-        if( south ) {
-          if( !minPath ) { minPath = south; }
-          else if( south.length < minPath.length ) {
-            minPath = south;
-          }
-        }
-        if( west ) {
-          if( !minPath ) { minPath = west; }
-          else if( west.length < minPath.length ) {
-            minPath = west;
-          }
-        }
-        return minPath;
-      }
-
       var counter = 0;
-      var verticalWalls = [
-        1,9,0,0,1,0,1,0,9,0,0,1,0,0,0,0,1,9,1,0,1,
-        1,1,0,1,9,0,0,1,0,0,1,9,1,0,0,0,1,1,9,0,1,
-        1,9,1,1,0,0,0,1,1,0,9,0,9,0,1,1,1,1,1,0,1,
-        1,1,9,0,1,0,1,1,0,1,9,1,0,1,0,9,1,1,9,1,1,
-        1,0,9,9,1,9,1,9,1,9,0,0,1,9,1,1,9,1,0,1,1,
-        1,0,1,1,1,1,1,1,1,1,0,0,0,1,1,0,0,1,1,0,1,
-        1,0,9,1,9,1,1,1,1,9,0,9,0,1,0,9,0,0,1,0,1,
-        1,1,0,1,0,1,0,0,1,1,0,0,0,1,1,1,1,9,9,1,1,
-        1,9,1,0,9,9,1,0,9,1,9,0,0,0,9,0,0,9,1,1,1,
-        1,1,9,0,1,9,0,9,0,0,1,1,1,0,1,0,9,0,0,9,1,
-        1,0,0,1,0,0,9,0,1,0,9,1,0,0,0,0,1,0,9,0,1,
-      ];
-      var horizontalWalls = [
-        1,0,1,9,0,1,9,9,1,1,9,9,0,1,9,1,1,0,0,1,0,1,
-        1,0,9,0,9,1,1,9,0,1,1,0,1,1,1,9,0,0,1,1,9,1,
-        1,0,1,9,1,1,9,0,0,9,1,9,1,1,0,0,1,9,0,0,9,1,
-        1,0,1,0,1,1,0,9,1,0,0,1,9,1,1,1,0,0,1,0,0,1,
-        1,9,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,1,
-        1,0,1,9,0,0,9,0,0,9,0,1,0,0,9,1,1,1,9,9,1,1,
-        1,0,9,0,1,0,0,1,9,1,1,1,1,9,0,0,0,1,0,1,0,1,
-        1,1,0,1,1,0,0,1,1,0,9,1,1,1,9,1,0,1,1,0,9,1,
-        1,0,0,0,0,0,1,0,1,1,0,9,9,1,1,1,9,1,1,9,9,1,
-        1,9,1,9,1,9,1,1,9,1,1,0,0,1,9,9,1,9,1,1,9,1,
-      ];
-      var verticalWallsZero = [];
-      for( var j = 0; j < 11; j++ ) {
-        for( var i = 0; i < 21; i++ ) {
-          verticalWallsZero.push( verticalWalls[ j * 21 + i ] );
-          if( i < 20 ) {
-            verticalWallsZero.push( 0 );
-          }
-        }
-      }
-      var horizontalWallsZero = [];
-      for( var j = 0; j < 10; j++ ) {
-        for( var i = 0; i < 22; i++ ) {
-          horizontalWallsZero.push( horizontalWalls[ j * 22 + i ] );
-          if( i > 0 && i < 20 ) {
-            horizontalWallsZero.push( 1 );
-          }
-        }
-      }
-      var maze = [];
-      // Top walls
-      for( var i = 0; i < 41; i++ ) {
-        maze.push( 1 );
-      }
-      for( var j = 0; j < 21; j++ ) {
-        for( var i = 0; i < 41; i++ ) {
-          if( j % 2 === 0 ) {
-            maze.push( verticalWallsZero[ Math.floor( j / 2 ) * 41 + i ] );
-          }
-          else {
-            maze.push( horizontalWallsZero[ Math.floor( j / 2 ) * 41 + i ] );
-          }
-        }
-      }
-      // Bottom Walls
-      for( var i = 0; i < 41; i++ ) {
-        maze.push( 1 );
-      }
-      function roomToGrid( val ) {
-        return 1 + ( val * 2 );
-      }
-      function gridToMap( val ) {
-        return ( Math.floor( val / 2 ) ) * 96 + 48;
-      }
-      function mapToGrid( val ) {
-        return Math.floor( val / 96 ) * 2 + 1;
-      }
+      const playerSpeed = 10;
+      var players = [];
+      // var player = {
+      //   name,
+      //   x,
+      //   y,
+      //   path,
+      //   points
+      // }
       // Removing doors
       maze = maze.map( x => x === 9 ? 0 : x );
       var pathBalls = [];
       function plotMap( x, y ) {
-        Unicorn.AddObject( "ball1", {
+        Unicorn.AddObject( "b", {
           type: "circle",
           x: gridToMap( roomToGrid( x ) ), y: gridToMap( roomToGrid( y ) ),
           radius: 24,
@@ -181,180 +41,46 @@
           sprite: "map",
           isStatic: true
         } );
-        console.log( map );
-        // var map = Unicorn.AddOverlay( "map", "map", 0, 0 );
         map.sprite.scale.x = 3;
         map.sprite.scale.y = 3;
 
-        // plotMap( 7, 1 );
-        // plotMap( 7, 3 );
-
-        // var path = findTheWay( maze, 41, 23,
-        //   // roomToGrid( 1 ), roomToGrid( 0 ),
-        //   // roomToGrid( 6 ), roomToGrid( 3 ) );
-        //   roomToGrid( 0 ), roomToGrid( 0 ),
-        //   roomToGrid( 19 ), roomToGrid( 10 ) );
-        // console.log( path );
-
-        // path.forEach( (p, i) => {
-        //   if( i % 2 === 0 ) {
-        //     Unicorn.AddObject( "ball1", {
-        //       type: "circle",
-        //       x: gridToMap( p.x ), y: gridToMap( p.y ),
-        //       radius: 32,
-        //       isStatic: true
-        //     } );
-        //   }
-        // });
-        // Unicorn.AddText( "title", "Pink Fluffy Unicorn Game Engine", 50, 50, {
-        //   fontFamily: 'Bubblegum Sans',
-        //   fontSize: 36,
-        //   fontWeight: 'bold',
-        //   fill: "#ffffff"
-        // });
-        // Unicorn.AddObject( "box", {
-        //   type: "rectangle",
-        //   x: 64, y: 300,
-        //   width: 128, height: 128,
-        //   // sprite: "unicorn",
-        //   // bounce: 3,
-        //   isStatic: true
-        // } );
-        // Unicorn.AddDetector( "detect", {
-        //   type: "rectangle",
-        //   x: 64, y: 300,
-        //   width: 128, height: 128
-        // }, ( label, body ) => {
-        //   console.log( "Enter:", label, body );
-        //   Unicorn.PlaySound( "fart", {
-        //     volume: 0.25
-        //   } );
-        // }, ( label, body ) => {
-        //   console.log( "Exit:", label, body );
-        // } );
-        // Unicorn.AddObject( "ball1", {
-        //   type: "circle",
-        //   x: gridToMap( roomToGrid( 0 ) ), y: gridToMap( roomToGrid( 0 ) ),
-        //   radius: 32
-        // } );
-        // Unicorn.AddObject( "ball2", {
-        //   type: "circle",
-        //   x: 256, y: 64,
-        //   radius: 64,
-        //   // sprite: "ball",
-        //   friction: 0.02
-        // } );
-        // Unicorn.ConnectObjects( "ball1", "ball2", {
-        //   length: 192,
-        //   damping: 0.5,
-        //   stiffness: 0.2
-        // } );
-        // Unicorn.ConnectObjects( "", "ball2", {
-        //   damping: 0.5,
-        //   stiffness: 0.2
-        // }, { x: 300, y: 0 } );
-        // Unicorn.AddParticles( "WIND", {
-        //   blendMode: PIXI.BLEND_MODES.MULTIPLY,
-        //   shape: "line", // "cone", "line"
-        //   lineDirection: Math.PI / 2,
-        //   // length: 400,
-        //   angle: 0,
-        //   startColor: "#333333",
-        //   endColor: "#000000",
-        //   intensity: 20, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 2.25,
-        //   decay: 0.5, // Scale from 0 - 10
-        // }, -100, 0);
-        // Unicorn.AddParticles( "windysnow", {
-        //   blendMode: PIXI.BLEND_MODES.DEFAULT,
-        //   shape: "line", // "cone", "line"
-        //   // lineDirection: 0,
-        //   length: 1920,
-        //   angle: Math.PI / 4,
-        //   // startColor: "#88ff00",
-        //   // endColor: "#ff0088",
-        //   startColor: "#ffffff",
-        //   endColor: "#ffffff",
-        //   intensity: 5, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 1.25,
-        //   decay: 5, // Scale from 0 - 10
-        // }, -640, 0);
-        // Unicorn.AddParticles( "ROOFISONFIRE", {
-        //   blendMode: PIXI.BLEND_MODES.DEFAULT,
-        //   shape: "line", // "cone", "line"
-        //   // lineDirection: 0,
-        //   // length: 400,
-        //   angle: Math.PI / 2,
-        //   startColor: "#ff0000",
-        //   endColor: "#FB8200",
-        //   intensity: 10000, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 0.25,
-        //   decay: 2, // Scale from 0 - 10
-        // }, 0, 0);
-        // Unicorn.AddParticles( "FIRE", {
-        //   blendMode: PIXI.BLEND_MODES.DEFAULT,
-        //   shape: "line", // "cone", "line"
-        //   // lineDirection: 0,
-        //   // length: 400,
-        //   angle: -Math.PI / 2,
-        //   startColor: "#ff0000",
-        //   endColor: "#FB8200",
-        //   intensity: 10000, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 0.25,
-        //   decay: 2, // Scale from 0 - 10
-        // }, 0, 720);
-        // Unicorn.AddParticles( "snow", {
-        //   blendMode: PIXI.BLEND_MODES.DEFAULT,
-        //   shape: "line", // "cone", "line"
-        //   // lineDirection: 0,
-        //   // length: 400,
-        //   angle: Math.PI / 2,
-        //   // startColor: "#88ff00",
-        //   // endColor: "#ff0088",
-        //   startColor: "#ffffff",
-        //   endColor: "#ffffff",
-        //   intensity: 4, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 1.25,
-        //   decay: 5, // Scale from 0 - 10
-        // }, 0, 0);
-        // Unicorn.AddParticles( "blastoff", {
-        //   shape: "cone", // "cone", "line"
-        //   angle: Math.PI / 2,
-        //   spread: Math.PI / 2,
-        //   // startColor: "#88ff00",
-        //   endColor: "#ff0088",
-        //   startColor: "#FB8200",
-        //   // endColor: "#FEBE79",
-        //   intensity: 50, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 0.25,
-        //   decay: 1, // Scale from 0 - 10
-        // }, 600, 100);
-        // Unicorn.AddParticles( "fireworks", {
-        //   shape: "circle", // "cone", "line"
-        //   // startColor: "#88ff00",
-        //   // endColor: "#ff0088",
-        //   startColor: "#FB8200",
-        //   endColor: "#FEBE79",
-        //   intensity: 10, // Scale from 1 - 10
-        //   minSpeed: 0.1,
-        //   maxSpeed: 0.25,
-        //   decay: 1, // Scale from 0 - 10
-        // }, 100, 100);
-        // Unicorn.AddTimer( "boom", 5000, () => {
-        //   Unicorn.SetVelocity( "ball1", 50, -10 );
-        //   Unicorn.ResetTimer( "boom", 2000 );
-        // } )
+        // Wall Debug
+        for( var y = 0; y < 23; y++ ) {
+          for( var x = 0; x < 41; x++ ) {
+            if( maze[ y * 41 + x ] === 1 ) {
+              Unicorn.AddObject( "b", {
+                type: "circle",
+                x: x * 48, y: y * 48,
+                radius: 6,
+                isStatic: true
+              } );
+            }
+          }
+        }
       }
 
       function Update( timestamp, timeDiffInMs ) {
         // Add Update Loop
         // console.log( timestamp, timeDiffInMs );
+
+        players.forEach( p => {
+          if( p.path.length > 0 ) {
+            p.progress += timeDiffInMs / 1000 * playerSpeed;
+            if( p.progress > 1 ) {
+              p.progress = 0;
+              p.x = p.path[ 0 ].x;
+              p.y = p.path[ 0 ].y;
+              p.sprite.x = p.x;
+              p.sprite.y = p.y;
+              // Remove two top paths
+              p.path.shift();
+              p.path.shift();
+            }
+            var nextStop = p.path[ 0 ];
+            p.sprite.x = p.x + p.progress * ( nextStop.x - p.x );
+            p.sprite.y = p.y + p.progress * ( nextStop.y - p.y );
+          }
+        });
       }
 
       function OnChatCommand( user, command, message, flags ) {
@@ -365,7 +91,6 @@
           var y = parseInt( parts[ 1 ] );
           if( x >= 0 && y >= 0 && x < 20 && y < 11 ) {
             // plotMap( x, y );
-
             pathBalls.forEach( x => {
               Unicorn.RemoveObject( x.label );
             });
@@ -375,6 +100,20 @@
               roomToGrid( 10 ), roomToGrid( 5 ),
               roomToGrid( x ), roomToGrid( y ) );
             console.log( path );
+
+            players.push( {
+              name: "FANCY SHEEP",
+              x: roomToGrid( 10 ), y: roomToGrid( 5 ),
+              progress: 0,
+              path,
+              points: 0,
+              sprite: Unicorn.AddObject( "ball" + counter++, {
+                  type: "circle",
+                  x: -1000, y: -1000,
+                  radius: 24,
+                  isStatic: true
+                } )
+            });
 
             path.forEach( (p, i) => {
               if( i % 2 === 0 ) {
@@ -404,7 +143,7 @@
           background: "transparent",
           init: Init,
           update: Update,
-          channel: "MaayaInsane",
+          channel: "Instafluff",//"MaayaInsane",
           onCommand: OnChatCommand,
           onChat: OnChatMessage,
           gravity: { x: 0, y: 0 }
