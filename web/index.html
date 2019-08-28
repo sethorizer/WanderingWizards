@@ -10,8 +10,8 @@
     <div id="unicorn-display"></div>
     <script>
       var counter = 0;
-      const playerSpeed = 10;
-      var players = [];
+      const playerSpeed = 1;
+      var players = {};
       // var player = {
       //   name,
       //   x,
@@ -43,44 +43,92 @@
         } );
         map.sprite.scale.x = 3;
         map.sprite.scale.y = 3;
+        //
+        // // Wall Debug
+        // for( var y = 0; y < 23; y++ ) {
+        //   for( var x = 0; x < 41; x++ ) {
+        //     if( maze[ y * 41 + x ] === 1 ) {
+        //       Unicorn.AddObject( "b", {
+        //         type: "circle",
+        //         x: x * 48, y: y * 48,
+        //         radius: 6,
+        //         isStatic: true
+        //       } );
+        //     }
+        //   }
+        // }
 
-        // Wall Debug
-        for( var y = 0; y < 23; y++ ) {
-          for( var x = 0; x < 41; x++ ) {
-            if( maze[ y * 41 + x ] === 1 ) {
-              Unicorn.AddObject( "b", {
-                type: "circle",
-                x: x * 48, y: y * 48,
-                radius: 6,
-                isStatic: true
-              } );
-            }
-          }
-        }
+        addPlayer( "FANCY SHEEP", 10, 10 );
       }
 
       function Update( timestamp, timeDiffInMs ) {
         // Add Update Loop
         // console.log( timestamp, timeDiffInMs );
 
-        players.forEach( p => {
+        for( var player in players ) {
+          var p = players[ player ];
           if( p.path.length > 0 ) {
+            // console.log( p.path );
             p.progress += timeDiffInMs / 1000 * playerSpeed;
             if( p.progress > 1 ) {
               p.progress = 0;
               p.x = p.path[ 0 ].x;
               p.y = p.path[ 0 ].y;
-              p.sprite.x = p.x;
-              p.sprite.y = p.y;
+              Unicorn.SetPosition( p.sprite.label, gridToMap( p.x ), gridToMap( p.y ) );
               // Remove two top paths
               p.path.shift();
               p.path.shift();
             }
-            var nextStop = p.path[ 0 ];
-            p.sprite.x = p.x + p.progress * ( nextStop.x - p.x );
-            p.sprite.y = p.y + p.progress * ( nextStop.y - p.y );
+            else {
+              var nextStop = p.path[ 0 ];
+              var posX = gridToMap( p.x ) + p.progress * ( gridToMap( nextStop.x - p.x ) - 48 );
+              var posY = gridToMap( p.y ) + p.progress * ( gridToMap( nextStop.y - p.y ) - 48 );
+              // console.log( posX, posY );
+              Unicorn.SetPosition( p.sprite.label, posX, posY );
+            }
           }
-        });
+        }
+      }
+
+      function addPlayer( name, x, y ) {
+        if( x >= 0 && y >= 0 && x < 20 && y < 11 ) {
+          // plotMap( x, y );
+          pathBalls.forEach( x => {
+            Unicorn.RemoveObject( x.label );
+          });
+          pathBalls = [];
+
+          var path = findTheWay( maze, 41, 23,
+            roomToGrid( 10 ), roomToGrid( 5 ),
+            roomToGrid( x ), roomToGrid( y ) );
+          // console.log( path );
+
+          players[ name ] = {
+            name: name,
+            x: roomToGrid( 10 ), y: roomToGrid( 5 ),
+            progress: 1,
+            path,
+            points: 0,
+            sprite: Unicorn.AddObject( "ball" + counter++, {
+                type: "circle",
+                x: -1000, y: -1000,
+                radius: 24,
+                isStatic: true
+              } )
+          };
+
+          // path.forEach( (p, i) => {
+          //   if( i % 2 === 0 ) {
+          //     var ball = Unicorn.AddObject( "ball" + counter++, {
+          //       type: "circle",
+          //       x: gridToMap( p.x ), y: gridToMap( p.y ),
+          //       radius: 24,
+          //       isStatic: true
+          //     } );
+          //     pathBalls.push( ball );
+          //   }
+          // });
+        }
       }
 
       function OnChatCommand( user, command, message, flags ) {
@@ -89,44 +137,7 @@
           var parts = message.split( " " );
           var x = parseInt( parts[ 0 ] );
           var y = parseInt( parts[ 1 ] );
-          if( x >= 0 && y >= 0 && x < 20 && y < 11 ) {
-            // plotMap( x, y );
-            pathBalls.forEach( x => {
-              Unicorn.RemoveObject( x.label );
-            });
-            pathBalls = [];
-
-            var path = findTheWay( maze, 41, 23,
-              roomToGrid( 10 ), roomToGrid( 5 ),
-              roomToGrid( x ), roomToGrid( y ) );
-            console.log( path );
-
-            players.push( {
-              name: "FANCY SHEEP",
-              x: roomToGrid( 10 ), y: roomToGrid( 5 ),
-              progress: 0,
-              path,
-              points: 0,
-              sprite: Unicorn.AddObject( "ball" + counter++, {
-                  type: "circle",
-                  x: -1000, y: -1000,
-                  radius: 24,
-                  isStatic: true
-                } )
-            });
-
-            path.forEach( (p, i) => {
-              if( i % 2 === 0 ) {
-                var ball = Unicorn.AddObject( "ball" + counter++, {
-                  type: "circle",
-                  x: gridToMap( p.x ), y: gridToMap( p.y ),
-                  radius: 24,
-                  isStatic: true
-                } );
-                pathBalls.push( ball );
-              }
-            });
-          }
+          addPlayer( user, x, y );
         }
       }
 
