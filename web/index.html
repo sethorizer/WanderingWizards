@@ -33,16 +33,62 @@
       function Init() {
         // Add Initialization Here
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-        Unicorn.Load( "map", "web/assets/bcg5.png" );
+        Unicorn.Load( "map", "web/assets/floor.png" );
         var map = Unicorn.AddObject( "map", {
           type: "rectangle",
-          x: 1920 / 2, y: 1080 / 2,
+          x: Math.floor( 1920 / 2 ), y: Math.floor( 1080 / 2 ) - 9,
           width: 1920, height: 1080,
           sprite: "map",
           isStatic: true
         } );
         map.sprite.scale.x = 3;
         map.sprite.scale.y = 3;
+        Unicorn.Load( "glow", "web/assets/lantern_glow.png" );
+        var glows = [
+          { x: 6, y: 5 },
+          { x: 634, y: 5 },
+          { x: 225, y: 35 },
+          { x: 509, y: 29 },
+          { x: 383, y: 58 },
+          { x: 574, y: 63 },
+          { x: 31, y: 95 },
+          { x: 289, y: 95 },
+          { x: 127, y: 128 },
+          { x: 385, y: 126 },
+          { x: 479, y: 128 },
+          { x: 223, y: 159 },
+          { x: 258, y: 223 },
+          { x: 608, y: 223 },
+          { x: 62, y: 253 },
+          { x: 415, y: 255 },
+          { x: 574, y: 287 },
+          { x: 95, y: 317 },
+          { x: 510, y: 318 },
+          { x: 5, y: 343 },
+          { x: 257, y: 345 },
+          { x: 633, y: 343 },
+        ];
+        glows.forEach( (g,i) => {
+          console.log( g );
+          var lantern = Unicorn.AddOverlay( "lantern" + i, "glow", g.x * 3, g.y * 3 );
+          lantern.anchor.set( 0.5 );
+          lantern.scale.x = 3;
+          lantern.scale.y = 3;
+          setInterval( () => {
+            lantern.alpha = Math.random() < 0.1 ? 0 : 1;
+            setTimeout( () => {
+              lantern.alpha = 1;
+            }, 200 + Math.random() * 200 );
+          }, 500 + Math.random() * 500 );
+        });
+        Unicorn.Load( "walls", "web/assets/walls.png" );
+        var walls = Unicorn.AddOverlay( "walls", "walls", 0, 0 );
+        walls.scale.x = 3;
+        walls.scale.y = 3;
+        Unicorn.Load( "guide", "web/assets/numbers.png" );
+        var guide = Unicorn.AddOverlay( "guide", "guide", 0, 0 );
+        guide.scale.x = 3;
+        guide.scale.y = 3;
         //
         // // Wall Debug
         // for( var y = 0; y < 23; y++ ) {
@@ -58,7 +104,7 @@
         //   }
         // }
 
-        addPlayer( "FANCY SHEEP", 10, 10 );
+        addPlayer( "FANCY SHEEP", 0, 0 );
       }
 
       function Update( timestamp, timeDiffInMs ) {
