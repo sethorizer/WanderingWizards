@@ -1,5 +1,5 @@
 # WanderingWizards
-Twitch Chat Integrated Maze Game
+Twitch Chat Integrated Maze Game by [MaayaInsane](https://twitch.tv/maayainsane) and [Instafluff](https://twitch.tv/instafluff)!
 
 Thank you to everyone that helped revise and fix the Maze map!
 
