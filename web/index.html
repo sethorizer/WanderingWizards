@@ -1,7 +1,14 @@
 <html>
   <head>
     <title>Pink Fluffy Unicorn Game Engine</title>
-    <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135113520-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-135113520-1');
+    </script>
     <link rel='stylesheet' href='unicorn.css' />
     <script src="pinkfluffyunicorn.min.js"></script>
     <script src="maze.js"></script>
@@ -10,6 +17,28 @@
     <div id="unicorn-display"></div>
     <script>
       const params = new URLSearchParams(location.search);
+      window.WebFontConfig = {
+          google: {
+              families: ['VT323'],
+          },
+          active() {
+              CreateGame();
+          },
+      };
+
+      /* eslint-disable */
+      // include the web-font loader script
+      (function() {
+          const wf = document.createElement('script');
+          wf.src = `${document.location.protocol === 'https:' ? 'https' : 'http'
+          }://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js`;
+          wf.type = 'text/javascript';
+          wf.async = 'true';
+          const s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(wf, s);
+      }());
+      /* eslint-enabled */
+
       var counter = 0;
       const playerSpeed = 1;
       const prizeCount = 3;
@@ -377,7 +406,7 @@
         }
       }
 
-      window.addEventListener('load', () => {
+      function CreateGame() {
         Unicorn.Create( "unicorn-display", {
           width: 1920,
           height: 1080,
@@ -390,7 +419,7 @@
           onChat: OnChatMessage,
           gravity: { x: 0, y: 0 }
         });
-      });
+      };
     </script>
   </body>
 </html>
