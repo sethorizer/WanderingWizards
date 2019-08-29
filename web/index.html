@@ -60,7 +60,7 @@
       function Init() {
         // Add Initialization Here
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-        Unicorn.Load( "map", "web/assets/floor.png" );
+        Unicorn.Load( "map", "assets/floor.png" );
         var map = Unicorn.AddObject( "map", {
           type: "rectangle",
           x: Math.floor( 1920 / 2 ), y: Math.floor( 1080 / 2 ) - 9,
@@ -70,7 +70,7 @@
         } );
         map.sprite.scale.x = 3;
         map.sprite.scale.y = 3;
-        Unicorn.Load( "glow", "web/assets/lantern_glow.png" );
+        Unicorn.Load( "glow", "assets/lantern_glow.png" );
         var glows = [
           { x: 6, y: 5 },
           { x: 634, y: 5 },
@@ -108,11 +108,11 @@
             }, 200 + Math.random() * 200 );
           }, 500 + Math.random() * 500 );
         });
-        Unicorn.Load( "walls", "web/assets/walls.png" );
+        Unicorn.Load( "walls", "assets/walls.png" );
         var walls = Unicorn.AddOverlay( "walls", "walls", 0, 0 );
         walls.scale.x = 3;
         walls.scale.y = 3;
-        Unicorn.Load( "fog", "web/assets/fog.png" );
+        Unicorn.Load( "fog", "assets/fog.png" );
         for( var y = 0; y < 11; y++ ) {
           for( var x = 0; x < 20; x++ ) {
             var px = gridToMap( roomToGrid( x ) );
@@ -131,23 +131,23 @@
           }
         }
         setInterval( updateFog, 1000 );
-        Unicorn.Load( "guide", "web/assets/numbers.png" );
+        Unicorn.Load( "guide", "assets/numbers.png" );
         var guide = Unicorn.AddOverlay( "guide", "guide", 0, 0 );
         guide.scale.x = 3;
         guide.scale.y = 3;
-        Unicorn.Load( "root", "web/assets/roots.png" ); // -5 pts
-        Unicorn.Load( "potion_green", "web/assets/potion_green.png" ); // 5 pts
-        Unicorn.Load( "potion_pink", "web/assets/potion_pink.png" ); // 10 pts
-        Unicorn.Load( "frog", "web/assets/frog.png" ); // 20 pts
-        Unicorn.Load( "egg", "web/assets/egg.png" ); // 30 pts
-        Unicorn.Load( "goblet", "web/assets/goblet.png" ); // 100 pts
+        Unicorn.Load( "root", "assets/roots.png" ); // -5 pts
+        Unicorn.Load( "potion_green", "assets/potion_green.png" ); // 5 pts
+        Unicorn.Load( "potion_pink", "assets/potion_pink.png" ); // 10 pts
+        Unicorn.Load( "frog", "assets/frog.png" ); // 20 pts
+        Unicorn.Load( "egg", "assets/egg.png" ); // 30 pts
+        Unicorn.Load( "goblet", "assets/goblet.png" ); // 100 pts
 
-        Unicorn.Load( "start", "web/assets/game_start.png" );
+        Unicorn.Load( "start", "assets/game_start.png" );
         gameStartLogo = Unicorn.AddOverlay( "gameStart", "start", 1920 / 2 + 50, 1080 / 5 );
         gameStartLogo.scale.x = 3;
         gameStartLogo.scale.y = 3;
         gameStartLogo.anchor.set( 0.5 );
-        Unicorn.Load( "dobby", "web/assets/dobby.gif" );
+        Unicorn.Load( "dobby", "assets/dobby.gif" );
         //
         // // Wall Debug
         // for( var y = 0; y < 23; y++ ) {
