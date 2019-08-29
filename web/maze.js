@@ -114,6 +114,9 @@ function gridToMap( val ) {
 function mapToGrid( val ) {
   return Math.floor( val / 96 ) * 2 + 1;
 }
+function gridToRoom( val ) {
+  return Math.floor( ( val - 1 ) / 2 );
+}
 const coordMap = {};
 const coordRows = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" ];
 const numCoordCols = 20;

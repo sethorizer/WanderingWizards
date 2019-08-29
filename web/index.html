@@ -11,6 +11,7 @@
     <script>
       var counter = 0;
       const playerSpeed = 1;
+      var fog = [];
       var players = {};
       // var player = {
       //   name,
@@ -85,6 +86,21 @@
         var walls = Unicorn.AddOverlay( "walls", "walls", 0, 0 );
         walls.scale.x = 3;
         walls.scale.y = 3;
+        Unicorn.Load( "fog", "web/assets/fog.png" );
+        for( var y = 0; y < 11; y++ ) {
+          for( var x = 0; x < 20; x++ ) {
+            var px = gridToMap( roomToGrid( x ) );
+            var py = gridToMap( roomToGrid( y ) );
+            var f = Unicorn.AddOverlay( "fog" + x + "_" + y, "fog", px, py );
+            f.scale.x = 3;
+            f.scale.y = 3;
+            f.anchor.set( 0.5 );
+            if( 8 < x && x < 12 && 3 < y && y < 6 ) {
+              f.alpha = 0;
+            }
+            fog.push( f );
+          }
+        }
         Unicorn.Load( "guide", "web/assets/numbers.png" );
         var guide = Unicorn.AddOverlay( "guide", "guide", 0, 0 );
         guide.scale.x = 3;
@@ -104,7 +120,7 @@
         //   }
         // }
 
-        movePlayer( "FANCY SHEEP", "A1" );
+        // movePlayer( "FANCY SHEEP", "A1" );
       }
 
       function Update( timestamp, timeDiffInMs ) {
@@ -131,6 +147,12 @@
               var posY = gridToMap( p.y ) + p.progress * ( gridToMap( nextStop.y - p.y ) - 48 );
               // console.log( posX, posY );
               Unicorn.SetPosition( p.sprite.label, posX, posY );
+              var rX = gridToRoom( mapToGrid( posX ) + 1 );
+              var rY = gridToRoom( mapToGrid( posY ) + 1 );
+              // console.log( posX, posY, rX, rY );
+              if( fog[ rY * 20 + rX ].alpha > 0 ) {
+                fog[ rY * 20 + rX ].alpha = Math.min( 1.0 - p.progress, fog[ rY * 20 + rX ].alpha );
+              }
             }
           }
         }
