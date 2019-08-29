@@ -1,4 +1,4 @@
-function findTheWay( grid, gridWidth, gridHeight, x, y, gX, gY, paths = [], travelDist = 0, discoveredMinDist = 999999 ) {
+function findTheWay( grid, gridWidth, gridHeight, x, y, gX, gY, paths = [], travelDist = 0, discoveredMinDist = 99 ) {
   // console.log( x, y, travelDist );
   if( travelDist > discoveredMinDist ) {
     return null;
@@ -44,36 +44,56 @@ function findTheWay( grid, gridWidth, gridHeight, x, y, gX, gY, paths = [], trav
   // }
   // return minPath;
 
-  // OPTIMIZED VERSION!
-  // North, East, South, West
-  var north = findTheWay( gridCopy, gridWidth, gridHeight, x, y - 1, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-  if( north && north.length < discoveredMinDist ) { discoveredMinDist = north.length; }
-  var east = findTheWay( gridCopy, gridWidth, gridHeight, x + 1, y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-  if( east && east.length < discoveredMinDist ) { discoveredMinDist = east.length; }
-  var south = findTheWay( gridCopy, gridWidth, gridHeight, x, y + 1, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
-  if( south && south.length < discoveredMinDist ) { discoveredMinDist = south.length; }
-  var west = findTheWay( gridCopy, gridWidth, gridHeight, x - 1, y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
+  // // OPTIMIZED VERSION!
+  // // North, East, South, West
+  // var north = findTheWay( gridCopy, gridWidth, gridHeight, x, y - 1, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
+  // if( north && north.length < discoveredMinDist ) { discoveredMinDist = north.length; }
+  // var east = findTheWay( gridCopy, gridWidth, gridHeight, x + 1, y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
+  // if( east && east.length < discoveredMinDist ) { discoveredMinDist = east.length; }
+  // var south = findTheWay( gridCopy, gridWidth, gridHeight, x, y + 1, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
+  // if( south && south.length < discoveredMinDist ) { discoveredMinDist = south.length; }
+  // var west = findTheWay( gridCopy, gridWidth, gridHeight, x - 1, y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
 
-  // Figure out minimum valid path length
-  var minPath = north;
-  if( east ) {
-    if( !minPath ) { minPath = east; }
-    else if( east.length < minPath.length ) {
-      minPath = east;
+  // // Figure out minimum valid path length
+  // var minPath = north;
+  // if( east ) {
+  //   if( !minPath ) { minPath = east; }
+  //   else if( east.length < minPath.length ) {
+  //     minPath = east;
+  //   }
+  // }
+  // if( south ) {
+  //   if( !minPath ) { minPath = south; }
+  //   else if( south.length < minPath.length ) {
+  //     minPath = south;
+  //   }
+  // }
+  // if( west ) {
+  //   if( !minPath ) { minPath = west; }
+  //   else if( west.length < minPath.length ) {
+  //     minPath = west;
+  //   }
+  // }
+  // return minPath;
+
+  // OPTIMIZED VERSION 2!
+  var nextPaths = [
+    { x: x, y: y - 1, score: Math.abs( gX - x ) + Math.abs( gY - ( y - 1 ) ) },
+    { x: x + 1, y: y, score: Math.abs( gX - ( x + 1 ) ) + Math.abs( gY - y ) },
+    { x: x, y: y + 1, score: Math.abs( gX - x ) + Math.abs( gY - ( y + 1 ) ) },
+    { x: x - 1, y: y, score: Math.abs( gX - ( x - 1 ) ) + Math.abs( gY - y ) },
+  ];
+  nextPaths.sort( ( a, b ) => a.score - b.score );
+  // console.log( nextPaths );
+  var minPath = null;
+  nextPaths.forEach( p => {
+    // console.log( p );
+    var path = findTheWay( gridCopy, gridWidth, gridHeight, p.x, p.y, gX, gY, paths.concat( { x, y } ), travelDist + 1, discoveredMinDist );
+    if( path && path.length < discoveredMinDist ) {
+      discoveredMinDist = path.length;
+      return minPath;
     }
-  }
-  if( south ) {
-    if( !minPath ) { minPath = south; }
-    else if( south.length < minPath.length ) {
-      minPath = south;
-    }
-  }
-  if( west ) {
-    if( !minPath ) { minPath = west; }
-    else if( west.length < minPath.length ) {
-      minPath = west;
-    }
-  }
+  });
   return minPath;
 }
 
@@ -147,4 +167,19 @@ function gridToMap( val ) {
 }
 function mapToGrid( val ) {
   return Math.floor( val / 96 ) * 2 + 1;
+}
+const coordMap = {};
+const coordRows = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" ];
+const numCoordCols = 20;
+coordRows.forEach( ( r, i ) => {
+  for( var c = 0; c < numCoordCols; c++ ) {
+    coordMap[ r + ( c + 1 ) ] = { x: c, y: i };
+  }
+} );
+// console.log( coordMap );
+function isCoord( val ) {
+  return coordMap[ val.toUpperCase() ] ? true : false;
+}
+function coordToRoom( val ) {
+  return coordMap[ val.toUpperCase() ];
 }

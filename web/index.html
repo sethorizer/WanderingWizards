@@ -69,7 +69,7 @@
           { x: 633, y: 343 },
         ];
         glows.forEach( (g,i) => {
-          console.log( g );
+          // console.log( g );
           var lantern = Unicorn.AddOverlay( "lantern" + i, "glow", g.x * 3, g.y * 3 );
           lantern.anchor.set( 0.5 );
           lantern.scale.x = 3;
@@ -104,7 +104,7 @@
         //   }
         // }
 
-        addPlayer( "FANCY SHEEP", 0, 0 );
+        movePlayer( "FANCY SHEEP", "A1" );
       }
 
       function Update( timestamp, timeDiffInMs ) {
@@ -136,7 +136,13 @@
         }
       }
 
-      function addPlayer( name, x, y ) {
+      function movePlayer( name, coord ) {
+        var x = -1, y = -1;
+        if( isCoord( coord ) ) {
+          var c = coordToRoom( coord );
+          x = c.x;
+          y = c.y;
+        }
         if( x >= 0 && y >= 0 && x < 20 && y < 11 ) {
           // plotMap( x, y );
           pathBalls.forEach( x => {
@@ -144,24 +150,40 @@
           });
           pathBalls = [];
 
+          var nextX, nextY;
+          if( players[ name ] ) {
+            if( players[ name ].path.length > 0 ) {
+              nextX = players[ name ].path[ 0 ].x;
+              nextY = players[ name ].path[ 0 ].y;
+            }
+            else {
+              players[ name ].progress = 1;
+              nextX = players[ name ].x;
+              nextY = players[ name ].y;
+            }
+          }
+          else {
+            nextX = roomToGrid( 10 ); nextY = roomToGrid( 5 );
+            players[ name ] = {
+              name: name,
+              x: nextX, y: nextY,
+              progress: 1,
+              path: [],
+              points: 0,
+              sprite: Unicorn.AddObject( "ball" + counter++, {
+                  type: "circle",
+                  x: -1000, y: -1000,
+                  radius: 24,
+                  isStatic: true
+                } )
+            };
+          }
+
           var path = findTheWay( maze, 41, 23,
-            roomToGrid( 10 ), roomToGrid( 5 ),
+            nextX, nextY,
             roomToGrid( x ), roomToGrid( y ) );
           // console.log( path );
-
-          players[ name ] = {
-            name: name,
-            x: roomToGrid( 10 ), y: roomToGrid( 5 ),
-            progress: 1,
-            path,
-            points: 0,
-            sprite: Unicorn.AddObject( "ball" + counter++, {
-                type: "circle",
-                x: -1000, y: -1000,
-                radius: 24,
-                isStatic: true
-              } )
-          };
+          players[ name ].path = path;
 
           // path.forEach( (p, i) => {
           //   if( i % 2 === 0 ) {
@@ -179,17 +201,17 @@
 
       function OnChatCommand( user, command, message, flags ) {
         // Handle Chat Commands
-        if( command === "maze" ) {
-          var parts = message.split( " " );
-          var x = parseInt( parts[ 0 ] );
-          var y = parseInt( parts[ 1 ] );
-          addPlayer( user, x, y );
+        if( command === "play" ) {
+          // TODO: Add Player!
         }
       }
 
       function OnChatMessage( user, message, flags, self ) {
         // Handle Chat Messages
-        console.log( message );
+        // console.log( message );
+        if( isCoord( message ) ) {
+          movePlayer( user, message );
+        }
       }
 
       window.addEventListener('load', () => {
@@ -200,7 +222,7 @@
           background: "transparent",
           init: Init,
           update: Update,
-          channel: "Instafluff",//"MaayaInsane",
+          channel: "Instafriend",//"Instafluff",//"MaayaInsane",
           onCommand: OnChatCommand,
           onChat: OnChatMessage,
           gravity: { x: 0, y: 0 }
