@@ -1,7 +1,7 @@
 <html>
   <head>
     <title>Pink Fluffy Unicorn Game Engine</title>
-    <link href="https://fonts.googleapis.com/css?family=Bubblegum+Sans" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=VT323" rel="stylesheet">
     <link rel='stylesheet' href='unicorn.css' />
     <script src="/web/pinkfluffyunicorn.min.js"></script>
     <script src="/web/maze.js"></script>
@@ -9,10 +9,36 @@
   <body>
     <div id="unicorn-display"></div>
     <script>
+      const params = new URLSearchParams(location.search);
       var counter = 0;
       const playerSpeed = 1;
+      const prizeCount = 3;
+      var prizeValues = {
+        "root": -5,
+        "potion_green": 5,
+        "potion_pink": 10,
+        "frog": 20,
+        "egg": 30,
+        "goblet": 100,
+      }
+      var prizeRarityBucket = {
+        "root": 30,
+        "potion_green": 50,
+        "potion_pink": 50,
+        "frog": 20,
+        "egg": 10,
+        "goblet": 1,
+      };
+      var prizeBucket = [];
+      Object.keys( prizeRarityBucket ).forEach( p => {
+        for( var i = 0; i < prizeRarityBucket[ p ]; i++ ) {
+          prizeBucket.push( p );
+        }
+      });
+      var prizes = [];
       var fog = [];
       var players = {};
+      var gameStartLogo;
       // var player = {
       //   name,
       //   x,
@@ -91,20 +117,37 @@
           for( var x = 0; x < 20; x++ ) {
             var px = gridToMap( roomToGrid( x ) );
             var py = gridToMap( roomToGrid( y ) );
-            var f = Unicorn.AddOverlay( "fog" + x + "_" + y, "fog", px, py );
+            let f = Unicorn.AddOverlay( "fog" + x + "_" + y, "fog", px, py );
             f.scale.x = 3;
             f.scale.y = 3;
             f.anchor.set( 0.5 );
             if( 8 < x && x < 12 && 3 < y && y < 6 ) {
               f.alpha = 0;
             }
+            if( Math.random() > 0.15 ) {
+              f.alpha = 0;
+            }
             fog.push( f );
           }
         }
+        setInterval( updateFog, 1000 );
         Unicorn.Load( "guide", "web/assets/numbers.png" );
         var guide = Unicorn.AddOverlay( "guide", "guide", 0, 0 );
         guide.scale.x = 3;
         guide.scale.y = 3;
+        Unicorn.Load( "root", "web/assets/roots.png" ); // -5 pts
+        Unicorn.Load( "potion_green", "web/assets/potion_green.png" ); // 5 pts
+        Unicorn.Load( "potion_pink", "web/assets/potion_pink.png" ); // 10 pts
+        Unicorn.Load( "frog", "web/assets/frog.png" ); // 20 pts
+        Unicorn.Load( "egg", "web/assets/egg.png" ); // 30 pts
+        Unicorn.Load( "goblet", "web/assets/goblet.png" ); // 100 pts
+
+        Unicorn.Load( "start", "web/assets/game_start.png" );
+        gameStartLogo = Unicorn.AddOverlay( "gameStart", "start", 1920 / 2 + 50, 1080 / 5 );
+        gameStartLogo.scale.x = 3;
+        gameStartLogo.scale.y = 3;
+        gameStartLogo.anchor.set( 0.5 );
+        Unicorn.Load( "dobby", "web/assets/dobby.gif" );
         //
         // // Wall Debug
         // for( var y = 0; y < 23; y++ ) {
@@ -121,6 +164,9 @@
         // }
 
         // movePlayer( "FANCY SHEEP", "A1" );
+        for( var i = 0; i < prizeCount; i++ ) {
+          addPrize();
+        }
       }
 
       function Update( timestamp, timeDiffInMs ) {
@@ -132,10 +178,22 @@
           if( p.path.length > 0 ) {
             // console.log( p.path );
             p.progress += timeDiffInMs / 1000 * playerSpeed;
-            if( p.progress > 1 ) {
+            if( p.progress >= 1 ) {
               p.progress = 0;
               p.x = p.path[ 0 ].x;
               p.y = p.path[ 0 ].y;
+              var rX = gridToRoom( p.x );
+              var rY = gridToRoom( p.y );
+              // Check for prizes
+              for( var i = 0; i < prizes.length; i++ ) {
+                if( prizes[ i ].x === rX && prizes[ i ].y === rY ) {
+                  p.points += prizeValues[ prizes[ i ].type ];
+                  console.log( p.name + " GOT THE PRIZE AND NOW HAS " + p.points + " points!" );
+                  Unicorn.RemoveObject( prizes[ i ].sprite.label );
+                  prizes.splice( i, 1 );
+                  addPrize();
+                }
+              }
               Unicorn.SetPosition( p.sprite.label, gridToMap( p.x ), gridToMap( p.y ) );
               // Remove two top paths
               p.path.shift();
@@ -155,10 +213,66 @@
               }
             }
           }
+          p.label.x = p.sprite.position.x;
+          if( p.label.x < 50 ) {
+             p.label.x += 50;
+          }
+          p.label.y = p.sprite.position.y - 50;
+          if( p.label.y < 60 ) {
+             p.label.y += 60;
+          }
+          p.label.anchor.set( 0.5 );
         }
       }
 
-      function movePlayer( name, coord ) {
+      function updateFog() {
+        let f = fog[ Math.floor( Math.random() * fog.length ) ];
+        // if( 8 < x && x < 12 && 3 < y && y < 6 ) {
+        //   f.alpha = 0;
+        // }
+        if( Math.random() > 0.15 ) {
+          let smooth = setInterval( () => {
+            f.alpha -= 0.01;
+            if( f.alpha <= 0 ) {
+              clearInterval( smooth );
+            }
+          }, 10 );
+        }
+        else {
+          let smooth = setInterval( () => {
+            f.alpha += 0.01;
+            if( f.alpha >= 1 ) {
+              clearInterval( smooth );
+            }
+          }, 10 );
+        }
+      }
+
+      function addPrize() {
+        // TODO: Select random empty spot
+        var rX = Math.floor( Math.random() * 20 );
+        var rY = Math.floor( Math.random() * 11 );
+        var pX = gridToMap( roomToGrid( rX ) );
+        var pY = gridToMap( roomToGrid( rY ) );
+        var type = prizeBucket[ Math.floor( Math.random() * prizeBucket.length ) ];
+        var prize = Unicorn.AddObject( "prize" + counter++, {
+          type: "circle",
+          sprite: type,
+          x: pX, y: pY,
+          radius: 24,
+          isStatic: true
+        });
+        prize.sprite.scale.x = 3;
+        prize.sprite.scale.y = 3;
+        prizes.push( {
+          x: rX,
+          y: rY,
+          type: type,
+          sprite: prize
+        });
+      }
+
+      function movePlayer( name, coord, color = "#ffffff" ) {
         var x = -1, y = -1;
         if( isCoord( coord ) ) {
           var c = coordToRoom( coord );
@@ -185,19 +299,39 @@
             }
           }
           else {
+            if( Object.keys( players ).length === 0 ) {
+              setTimeout( () => {
+                let smooth = setInterval( () => {
+                  gameStartLogo.alpha -= 0.01;
+                  if( gameStartLogo.alpha <= 0 ) {
+                    clearInterval( smooth );
+                  }
+                }, 10 );
+              }, 10000 );
+            }
             nextX = roomToGrid( 10 ); nextY = roomToGrid( 5 );
+            var pSprite = Unicorn.AddObject( "ball" + counter++, {
+                type: "circle",
+                sprite: "dobby",
+                x: -1000, y: -1000,
+                radius: 24,
+                isStatic: true
+              } );
+              pSprite.sprite.scale.x = 3;
+              pSprite.sprite.scale.y = 3;
             players[ name ] = {
               name: name,
               x: nextX, y: nextY,
               progress: 1,
               path: [],
               points: 0,
-              sprite: Unicorn.AddObject( "ball" + counter++, {
-                  type: "circle",
-                  x: -1000, y: -1000,
-                  radius: 24,
-                  isStatic: true
-                } )
+              label: Unicorn.AddText( name, name, -1000, -1000, {
+                fontFamily: 'VT323',
+                fontSize: 36,
+                fontWeight: 'bold',
+                fill: color
+              } ),
+              sprite: pSprite
             };
           }
 
@@ -221,18 +355,25 @@
         }
       }
 
-      function OnChatCommand( user, command, message, flags ) {
+      function OnChatCommand( user, command, message, flags, extra ) {
         // Handle Chat Commands
         if( command === "play" ) {
-          // TODO: Add Player!
+          var spawnLocations = [ "E10", "E11", "E12", "F10", "F11", "F12" ];
+          movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff" )
+        }
+        if( flags.broadcaster || flags.mod ) {
+          if( command === "prize" ) {
+            addPrize();
+          }
         }
       }
 
-      function OnChatMessage( user, message, flags, self ) {
+      function OnChatMessage( user, message, flags, self, extra ) {
         // Handle Chat Messages
         // console.log( message );
+        // console.log( extra.userColor );
         if( isCoord( message ) ) {
-          movePlayer( user, message );
+          movePlayer( user, message, extra.userColor || "#ffffff" );
         }
       }
 
@@ -244,7 +385,7 @@
           background: "transparent",
           init: Init,
           update: Update,
-          channel: "Instafriend",//"Instafluff",//"MaayaInsane",
+          channel: params.get( "channel" ),
           onCommand: OnChatCommand,
           onChat: OnChatMessage,
           gravity: { x: 0, y: 0 }
