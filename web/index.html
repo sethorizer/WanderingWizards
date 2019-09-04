@@ -41,6 +41,7 @@
 
       var counter = 0;
       const playerSpeed = 1;
+      const trapCount = 5;
       const prizeCount = 3;
       var prizeValues = {
         "root": -5,
@@ -50,24 +51,35 @@
         "egg": 30,
         "goblet": 100,
       }
-      var prizeRarityBucket = {
+      var trapRarityBucket = {
         "root": 30,
+      };
+      var prizeRarityBucket = {
         "potion_green": 50,
         "potion_pink": 50,
         "frog": 20,
         "egg": 10,
         "goblet": 1,
       };
+      var trapBucket = [];
       var prizeBucket = [];
+      Object.keys( trapRarityBucket ).forEach( p => {
+        for( var i = 0; i < trapRarityBucket[ p ]; i++ ) {
+          trapBucket.push( p );
+        }
+      });
       Object.keys( prizeRarityBucket ).forEach( p => {
         for( var i = 0; i < prizeRarityBucket[ p ]; i++ ) {
           prizeBucket.push( p );
         }
       });
+      var traps = [];
       var prizes = [];
       var fog = [];
       var players = {};
       var gameStartLogo;
+      var scoreboardBG;
+      var gameScores;
       // var player = {
       //   name,
       //   x,
@@ -141,12 +153,14 @@
         var walls = Unicorn.AddOverlay( "walls", "walls", 0, 0 );
         walls.scale.x = 3;
         walls.scale.y = 3;
-        Unicorn.Load( "fog", "assets/fog.png" );
+        Unicorn.Load( "fog0", "assets/fog4.png" );
+        Unicorn.Load( "fog1", "assets/fog3.png" );
         for( var y = 0; y < 11; y++ ) {
           for( var x = 0; x < 20; x++ ) {
             var px = gridToMap( roomToGrid( x ) );
             var py = gridToMap( roomToGrid( y ) );
-            let f = Unicorn.AddOverlay( "fog" + x + "_" + y, "fog", px, py );
+            var fogImage = "fog" + Math.floor( Math.random() * 2 );
+            let f = Unicorn.AddOverlay( "fog" + x + "_" + y, fogImage, px, py );
             f.scale.x = 3;
             f.scale.y = 3;
             f.anchor.set( 0.5 );
@@ -192,9 +206,25 @@
         //   }
         // }
 
+        Unicorn.Load( "scoreboard", "assets/scoreboard.png" );
+        scoreboardBG = Unicorn.AddOverlay( "scoreboard", "scoreboard", 50, 50 );
+        scoreboardBG.scale.x = 3;
+        scoreboardBG.scale.y = 3;
+        scoreboardBG.alpha = 0;
+
+        gameScores = Unicorn.AddText( "scores", "Scores:", 50, 50, {
+          fontFamily: 'VT323',
+          fontSize: 42,
+          fontWeight: 'bold',
+          fill: "#ffffff"
+        } )
+
         // movePlayer( "FANCY SHEEP", "A1" );
         for( var i = 0; i < prizeCount; i++ ) {
           addPrize();
+        }
+        for( var i = 0; i < trapCount; i++ ) {
+          addTrap();
         }
       }
 
@@ -221,6 +251,17 @@
                   Unicorn.RemoveObject( prizes[ i ].sprite.label );
                   prizes.splice( i, 1 );
                   addPrize();
+                  showLeaderboard();
+                }
+              }
+              for( var i = 0; i < traps.length; i++ ) {
+                if( traps[ i ].x === rX && traps[ i ].y === rY ) {
+                  p.points += prizeValues[ traps[ i ].type ];
+                  console.log( p.name + " HIT A TRAP AND NOW HAS " + p.points + " points!" );
+                  Unicorn.RemoveObject( traps[ i ].sprite.label );
+                  traps.splice( i, 1 );
+                  addTrap();
+                  showLeaderboard();
                 }
               }
               Unicorn.SetPosition( p.sprite.label, gridToMap( p.x ), gridToMap( p.y ) );
@@ -277,6 +318,30 @@
         }
       }
 
+      function addTrap() {
+        // TODO: Select random empty spot
+        var rX = Math.floor( Math.random() * 20 );
+        var rY = Math.floor( Math.random() * 11 );
+        var pX = gridToMap( roomToGrid( rX ) );
+        var pY = gridToMap( roomToGrid( rY ) );
+        var type = trapBucket[ Math.floor( Math.random() * trapBucket.length ) ];
+        var trap = Unicorn.AddObject( "trap" + counter++, {
+          type: "circle",
+          sprite: type,
+          x: pX, y: pY,
+          radius: 24,
+          isStatic: true
+        });
+        trap.sprite.scale.x = 3;
+        trap.sprite.scale.y = 3;
+        traps.push( {
+          x: rX,
+          y: rY,
+          type: type,
+          sprite: trap
+        });
+      }
+
       function addPrize() {
         // TODO: Select random empty spot
         var rX = Math.floor( Math.random() * 20 );
@@ -301,7 +366,14 @@
         });
       }
 
+      function showLeaderboard() {
+        var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: players[ p ].name }) );
+        scores.sort( (a,b) => b.score - a.score );
+        gameScores.text = "Scores:\n" + scores.map( s => s.name + ": " + s.score ).join( "\n" );
+      }
+
       function movePlayer( name, coord, color = "#ffffff" ) {
+        showLeaderboard();
         var x = -1, y = -1;
         if( isCoord( coord ) ) {
           var c = coordToRoom( coord );
@@ -419,7 +491,7 @@
           onChat: OnChatMessage,
           gravity: { x: 0, y: 0 }
         });
-      };
+      }
     </script>
   </body>
 </html>
