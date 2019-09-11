@@ -88,6 +88,9 @@
       var players = {};
       var gameStartLogo;
       var scoreboardBG;
+      var endGameBG;
+      var endGameNote;
+      var endGameSign;
       var gameScores;
       // var player = {
       //   name,
@@ -222,18 +225,37 @@
         //   }
         // }
 
+        Unicorn.Load( "end_bg", "assets/end_bcg_dark.png" );
+        endGameBG = Unicorn.AddOverlay( "end_bg", "end_bg", 0, 0 );
+        endGameBG.scale.x = 3;
+        endGameBG.scale.y = 3;
+        endGameBG.alpha = 0;
+
         Unicorn.Load( "scoreboard", "assets/scoreboard.png" );
-        scoreboardBG = Unicorn.AddOverlay( "scoreboard", "scoreboard", 50, 50 );
+        scoreboardBG = Unicorn.AddOverlay( "scoreboard", "scoreboard", 1300, 50 );
         scoreboardBG.scale.x = 3;
         scoreboardBG.scale.y = 3;
         scoreboardBG.alpha = 0;
 
-        gameScores = Unicorn.AddText( "scores", "Scores:", 50, 50, {
+        Unicorn.Load( "end_sign", "assets/game_end_sign.png" );
+        endGameSign = Unicorn.AddOverlay( "end_sign", "end_sign", 250, 50 );
+        endGameSign.scale.x = 3;
+        endGameSign.scale.y = 3;
+        endGameSign.alpha = 0;
+
+        Unicorn.Load( "end_note", "assets/end_note.png" );
+        endGameNote = Unicorn.AddOverlay( "end_note", "end_note", 200, 400 );
+        endGameNote.scale.x = 3;
+        endGameNote.scale.y = 3;
+        endGameNote.alpha = 0;
+
+        gameScores = Unicorn.AddText( "scores", "Scores:", 1400, 250, {
           fontFamily: 'VT323',
-          fontSize: 42,
+          fontSize: 50,
           fontWeight: 'bold',
           fill: "#ffffff"
-        } )
+        } );
+        gameScores.alpha = 0;
 
         // movePlayer( "FANCY SHEEP", "A1" );
         for( var i = 0; i < prizeCount; i++ ) {
@@ -304,11 +326,16 @@
           if( p.label.x < 50 ) {
              p.label.x += 50;
           }
-          p.label.y = p.sprite.position.y - 50;
+          p.label.y = p.sprite.position.y - 60;
           if( p.label.y < 60 ) {
              p.label.y += 60;
           }
           p.label.anchor.set( 0.5 );
+
+          p.scoreLabel.x = p.label.x;
+          p.scoreLabel.y = p.label.y - 30;
+          p.scoreLabel.text = p.points === 0 ? "" : p.points;
+          p.scoreLabel.anchor.set( 0.5 );
 
           var direction = "front";
           if( p.sprite.position.x < prevX ) {
@@ -407,7 +434,7 @@
       function showLeaderboard() {
         var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: players[ p ].name }) );
         scores.sort( (a,b) => b.score - a.score );
-        gameScores.text = "Scores:\n" + scores.map( s => s.name + ": " + s.score ).join( "\n" );
+        gameScores.text = scores.map( s => s.name + ": " + s.score ).slice( 0, 14 ).join( "\n" );
       }
 
       function movePlayer( name, coord, color = "#ffffff", character = "" ) {
@@ -474,6 +501,12 @@
                 fontWeight: 'bold',
                 fill: color
               } ),
+              scoreLabel: Unicorn.AddText( name + "_points", "0", -1000, -1000, {
+                fontFamily: 'VT323',
+                fontSize: 36,
+                fontWeight: 'bold',
+                fill: "#ffffff"
+              } ),
               sprite: pSprite,
               character: character,
               frame: 0,
@@ -510,6 +543,13 @@
         if( flags.broadcaster || flags.mod || flags.vip ) {
           if( command === "prize" ) {
             addPrize();
+          }
+          if( command === "end" ) {
+            scoreboardBG.alpha = 1;
+            endGameSign.alpha = 1;
+            endGameNote.alpha = 1;
+            endGameBG.alpha = 1;
+            gameScores.alpha = 1;
           }
           if( command === "reset" ||
               command === "restart" ) {
