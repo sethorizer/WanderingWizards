@@ -420,7 +420,6 @@
               character = Object.keys( characters )[ Math.floor( Object.keys( characters ).length * Math.random() ) ];
             }
             var sprite = characters[ character ] + "_" + "front1";
-            console.log( sprite );
             if( Object.keys( players ).length === 0 ) {
               setTimeout( () => {
                 let smooth = setInterval( () => {
@@ -486,6 +485,10 @@
         if( flags.broadcaster || flags.mod ) {
           if( command === "prize" ) {
             addPrize();
+          }
+          if( command === "reset" ||
+              command === "restart" ) {
+            location.reload();
           }
         }
       }
