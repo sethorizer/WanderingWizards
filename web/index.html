@@ -250,6 +250,7 @@
 
         for( var player in players ) {
           var p = players[ player ];
+          var prevX = p.sprite.position.x, prevY = p.sprite.position.y;
           if( p.path.length > 0 ) {
             // console.log( p.path );
             p.progress += timeDiffInMs / 1000 * playerSpeed;
@@ -308,6 +309,27 @@
              p.label.y += 60;
           }
           p.label.anchor.set( 0.5 );
+
+          var direction = "front";
+          if( p.sprite.position.x < prevX ) {
+            direction = "left";
+          }
+          else if( p.sprite.position.x > prevX ) {
+            direction = "right";
+          }
+          else if( p.sprite.position.y < prevY ) {
+            direction = "back";
+          }
+          p.frameTime += timeDiffInMs;
+          if( p.frameTime > 1000 / 10 ) {
+            p.frameTime = 0;
+            p.frame = ( p.frame + 1 ) % 10;
+            // console.log( player, p.frame );
+            var frameName = characters[ p.character ] + "_" + direction + p.frame;
+            // console.log( p.sprite );
+            // console.log( assetReference[ frameName ] );
+            p.sprite.sprite.texture = assetReference[ frameName ];
+          }
         }
       }
 
@@ -452,7 +474,10 @@
                 fontWeight: 'bold',
                 fill: color
               } ),
-              sprite: pSprite
+              sprite: pSprite,
+              character: character,
+              frame: 0,
+              frameTime: 0,
             };
           }
 
@@ -482,7 +507,7 @@
           var spawnLocations = [ "E10", "E11", "E12", "F10", "F11", "F12" ];
           movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff", message.toLowerCase() )
         }
-        if( flags.broadcaster || flags.mod ) {
+        if( flags.broadcaster || flags.mod || flags.vip ) {
           if( command === "prize" ) {
             addPrize();
           }
