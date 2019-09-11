@@ -40,6 +40,7 @@
       /* eslint-enabled */
 
       var counter = 0;
+      var isGameEnded = false;
       const playerSpeed = 1;
       const trapCount = 5;
       const prizeCount = 3;
@@ -431,8 +432,15 @@
         });
       }
 
+      function truncateString( text, length ) {
+        if( text.length > length ) {
+          return text.substring( 0, length ) + "…";
+        }
+        return text;
+      }
+
       function showLeaderboard() {
-        var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: players[ p ].name }) );
+        var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: truncateString( players[ p ].name, 11 ) }) );
         scores.sort( (a,b) => b.score - a.score );
         gameScores.text = scores.map( s => s.name + ": " + s.score ).slice( 0, 14 ).join( "\n" );
       }
@@ -536,20 +544,27 @@
 
       function OnChatCommand( user, command, message, flags, extra ) {
         // Handle Chat Commands
-        if( command === "play" ) {
+        if( !isGameEnded && command === "play" ) {
           var spawnLocations = [ "E10", "E11", "E12", "F10", "F11", "F12" ];
           movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff", message.toLowerCase() )
         }
         if( flags.broadcaster || flags.mod || flags.vip ) {
-          if( command === "prize" ) {
+          if( !isGameEnded && command === "prize" ) {
             addPrize();
           }
           if( command === "end" ) {
+            isGameEnded = true;
             scoreboardBG.alpha = 1;
             endGameSign.alpha = 1;
             endGameNote.alpha = 1;
             endGameBG.alpha = 1;
             gameScores.alpha = 1;
+            // Hide player names
+            for( var player in players ) {
+              var p = players[ player ];
+              p.label.alpha = 0;
+              p.scoreLabel.alpha = 0;
+            }
           }
           if( command === "reset" ||
               command === "restart" ) {
@@ -562,7 +577,7 @@
         // Handle Chat Messages
         // console.log( message );
         // console.log( extra.userColor );
-        if( isCoord( message ) ) {
+        if( !isGameEnded && isCoord( message ) ) {
           movePlayer( user, message, extra.userColor || "#ffffff" );
         }
       }
