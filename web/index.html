@@ -76,6 +76,15 @@
       var traps = [];
       var prizes = [];
       var fog = [];
+      var characters = {
+        "maaya": "maaya",
+        "instafluff": "insta",
+        "dobby": "dobby",
+        "harry": "harry",
+        "hermione": "hermione",
+        "ron": "ron"
+      };
+      var animations = [ "front", "back", "left", "right" ];
       var players = {};
       var gameStartLogo;
       var scoreboardBG;
@@ -184,7 +193,14 @@
         Unicorn.Load( "frog", "assets/frog.png" ); // 20 pts
         Unicorn.Load( "egg", "assets/egg.png" ); // 30 pts
         Unicorn.Load( "goblet", "assets/goblet.png" ); // 100 pts
-
+        for( var c in characters ) {
+          animations.forEach( a => {
+            var name = characters[ c ] + "_" + a;
+            for( var i = 1; i < 11; i++ ) {
+              Unicorn.Load( name + ( i - 1 ), `assets/${c}/${name}/${name}${i}.png` );
+            }
+          });
+        };
         Unicorn.Load( "start", "assets/game_start.png" );
         gameStartLogo = Unicorn.AddOverlay( "gameStart", "start", 1920 / 2 + 50, 1080 / 5 );
         gameStartLogo.scale.x = 3;
@@ -372,7 +388,7 @@
         gameScores.text = "Scores:\n" + scores.map( s => s.name + ": " + s.score ).join( "\n" );
       }
 
-      function movePlayer( name, coord, color = "#ffffff" ) {
+      function movePlayer( name, coord, color = "#ffffff", character = "" ) {
         showLeaderboard();
         var x = -1, y = -1;
         if( isCoord( coord ) ) {
@@ -400,6 +416,11 @@
             }
           }
           else {
+            if( !characters[ character ] ) {
+              character = Object.keys( characters )[ Math.floor( Object.keys( characters ).length * Math.random() ) ];
+            }
+            var sprite = characters[ character ] + "_" + "front1";
+            console.log( sprite );
             if( Object.keys( players ).length === 0 ) {
               setTimeout( () => {
                 let smooth = setInterval( () => {
@@ -413,7 +434,7 @@
             nextX = roomToGrid( 10 ); nextY = roomToGrid( 5 );
             var pSprite = Unicorn.AddObject( "ball" + counter++, {
                 type: "circle",
-                sprite: "dobby",
+                sprite: sprite,
                 x: -1000, y: -1000,
                 radius: 24,
                 isStatic: true
@@ -460,7 +481,7 @@
         // Handle Chat Commands
         if( command === "play" ) {
           var spawnLocations = [ "E10", "E11", "E12", "F10", "F11", "F12" ];
-          movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff" )
+          movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff", message.toLowerCase() )
         }
         if( flags.broadcaster || flags.mod ) {
           if( command === "prize" ) {
