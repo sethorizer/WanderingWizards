@@ -595,6 +595,17 @@
           onChat: OnChatMessage,
           gravity: { x: 0, y: 0 }
         });
+        ComfyJS.onConnected = ( address, port, isFirstConnect ) => {
+          if( isFirstConnect ) {
+            fetch( "http://api.instafluff.tv:8082/notify?game=Wandering Wizards&channel=" + params.get( "channel" ) )
+            .then( r => r.json() )
+            .then( r => {
+              if( r.status === 0 ) {
+                console.log( "Error:", r.message );
+              }
+            });
+          }
+        };
       }
     </script>
   </body>
