@@ -597,7 +597,7 @@
         });
         ComfyJS.onConnected = ( address, port, isFirstConnect ) => {
           if( isFirstConnect ) {
-            fetch( "http://api.instafluff.tv:8082/notify?game=Wandering Wizards&channel=" + params.get( "channel" ) )
+            fetch( "https://api.instafluff.tv:8082/notify?game=Wandering Wizards&channel=" + params.get( "channel" ) )
             .then( r => r.json() )
             .then( r => {
               if( r.status === 0 ) {
