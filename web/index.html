@@ -206,11 +206,11 @@
             }
           });
         };
-        Unicorn.Load( "start", "assets/game_start.png" );
-        gameStartLogo = Unicorn.AddOverlay( "gameStart", "start", 1920 / 2 + 50, 1080 / 5 );
+        Unicorn.Load( "start", "assets/instructions.png" );
+        gameStartLogo = Unicorn.AddOverlay( "gameStart", "start", 50, 0 );
         gameStartLogo.scale.x = 3;
         gameStartLogo.scale.y = 3;
-        gameStartLogo.anchor.set( 0.5 );
+        // gameStartLogo.anchor.set( 0.5 );
         Unicorn.Load( "dobby", "assets/dobby.gif" );
         //
         // // Wall Debug
