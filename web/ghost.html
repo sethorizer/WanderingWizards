@@ -80,10 +80,12 @@
       var traps = [];
       var prizes = [];
       var fog = [];
-      var playableCharacters = [ "maaya", "instafluff" ];
+      var playableCharacters = [ "maaya", "instafluff", "jimmy", "avelana" ];
       var characters = {
         "maaya": "maaya",
         "instafluff": "insta",
+        "avelana": "avelana",
+        "jimmy": "jimmy",
         "ghost": "ghost"
       };
       var animations = [ "front", "back", "left", "right" ];
@@ -269,6 +271,7 @@
         endGameNote.scale.y = 3;
         endGameNote.alpha = 0;
 
+        // TODO: Make the Ghost Score RED
         gameScores = Unicorn.AddText( "scores", "Scores:", 1400, 250, {
           fontFamily: 'VT323',
           fontSize: 50,
