@@ -96,6 +96,8 @@
       var endGameNote;
       var endGameSign;
       var gameScores;
+      var scoreStar;
+      var topPlayer = null;
       // var player = {
       //   name,
       //   x,
@@ -208,6 +210,11 @@
             }
           });
         };
+        Unicorn.Load( "star", "assets/star.png" );
+        scoreStar = Unicorn.AddOverlay( "star", "star", -1000, -1000 );
+        scoreStar.scale.x = 3;
+        scoreStar.scale.y = 3;
+        scoreStar.anchor.set( 0.5 );
         Unicorn.Load( "start", "assets/instructions.png" );
         gameStartLogo = Unicorn.AddOverlay( "gameStart", "start", 50, 0 );
         gameStartLogo.scale.x = 3;
@@ -340,6 +347,11 @@
           p.scoreLabel.y = p.label.y - 30;
           p.scoreLabel.text = p.points === 0 ? "" : p.points;
           p.scoreLabel.anchor.set( 0.5 );
+          
+          if( player === topPlayer ) {
+            scoreStar.x = p.label.x;
+            scoreStar.y = p.label.y + 30;
+          }
 
           var direction = "front";
           if( p.sprite.position.x < prevX ) {
@@ -446,6 +458,15 @@
         var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: truncateString( players[ p ].name, 11 ) }) );
         scores.sort( (a,b) => b.score - a.score );
         gameScores.text = scores.map( s => s.name + ": " + s.score ).slice( 0, 14 ).join( "\n" );
+        if( scores.length > 0 && scores[ 0 ].score > 0 ) {
+          // Update the first player in the leaderboard to have a star on the score
+          topPlayer = scores[ 0 ].name;
+        }
+        else {
+          topPlayer = null;
+          scoreStar.x = -1000;
+          scoreStar.y = -1000;
+        }
       }
 
       function movePlayer( name, coord, color = "#ffffff", character = "" ) {
