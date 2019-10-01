@@ -54,16 +54,28 @@
         "frog": 20,
         "egg": 30,
         "goblet": 100,
+        "candycorn": 20,
+        "chocolate": 30,
+        "lifesaver": 25,
+        "green_treat": 5,
+        "pink_treat": 10,
+        "golden_pumpkin": 100,
       }
       var trapRarityBucket = {
         "root": 30,
       };
       var prizeRarityBucket = {
-        "potion_green": 50,
-        "potion_pink": 50,
-        "frog": 20,
-        "egg": 10,
-        "goblet": 1,
+        // "potion_green": 50,
+        // "potion_pink": 50,
+        // "frog": 20,
+        // "egg": 10,
+        // "goblet": 1,
+        "candycorn": 25,
+        "chocolate": 10,
+        "lifesaver": 20,
+        "green_treat": 50,
+        "pink_treat": 50,
+        "golden_pumpkin": 1,
       };
       var trapBucket = [];
       var prizeBucket = [];
@@ -80,13 +92,17 @@
       var traps = [];
       var prizes = [];
       var fog = [];
-      var playableCharacters = [ "maaya", "instafluff", "jimmy", "avellana" ];
+      var playableCharacters = [ "vampire", "witch", "zombie", "monster" ];
       var characters = {
+        "vampire": "vampire",
+        "witch": "witch",
+        "zombie": "zombie",
+        "monster": "monster",
+        "ghost": "ghost",
         "maaya": "maaya",
         "instafluff": "insta",
         "avellana": "avelana",
         "jimmy": "jimmy",
-        "ghost": "ghost"
       };
       var animations = [ "front", "back", "left", "right" ];
       const ghostName = "*BOO*";
@@ -135,27 +151,30 @@
         Unicorn.Load( "glow", "assets/lantern_glow.png" );
         var glows = [
           { x: 6, y: 5 },
+          { x: 192, y: 5 },
           { x: 634, y: 5 },
-          { x: 225, y: 35 },
-          { x: 509, y: 29 },
+          { x: 512, y: 31 },
           { x: 383, y: 58 },
-          { x: 574, y: 63 },
-          { x: 31, y: 95 },
-          { x: 289, y: 95 },
-          { x: 127, y: 128 },
-          { x: 385, y: 126 },
-          { x: 479, y: 128 },
-          { x: 223, y: 159 },
-          { x: 258, y: 223 },
-          { x: 608, y: 223 },
-          { x: 62, y: 253 },
-          { x: 415, y: 255 },
-          { x: 574, y: 287 },
-          { x: 95, y: 317 },
-          { x: 510, y: 318 },
-          { x: 5, y: 343 },
-          { x: 257, y: 345 },
-          { x: 633, y: 343 },
+          { x: 319, y: 63 },
+          { x: 576, y: 63 },
+          { x: 97, y: 93 },
+          { x: 225, y: 126 },
+          { x: 478, y: 128 },
+          { x: 62, y: 160 },
+          { x: 607, y: 158 },
+          { x: 543, y: 189 },
+          { x: 97, y: 223 },
+          { x: 255, y: 252 },
+          { x: 576, y: 63 },
+          { x: 414, y: 253 },
+          { x: 575, y: 286 },
+          { x: 576, y: 63 },
+          { x: 33, y: 318 },
+          { x: 576, y: 63 },
+          { x: 256, y: 320 },
+          { x: 386, y: 318 },
+          { x: 4, y: 345 },
+          { x: 635, y: 345 },
         ];
         glows.forEach( (g,i) => {
           // console.log( g );
@@ -205,6 +224,12 @@
         Unicorn.Load( "frog", "assets/frog.png" ); // 20 pts
         Unicorn.Load( "egg", "assets/egg.png" ); // 30 pts
         Unicorn.Load( "goblet", "assets/goblet.png" ); // 100 pts
+        Unicorn.Load( "candycorn", "assets/candycorn.png" );
+        Unicorn.Load( "chocolate", "assets/chocolate.png" );
+        Unicorn.Load( "lifesaver", "assets/lifesaver.png" );
+        Unicorn.Load( "green_treat", "assets/green_treat.png" );
+        Unicorn.Load( "pink_treat", "assets/pink_treat.png" );
+        Unicorn.Load( "golden_pumpkin", "assets/golden_pumpkin.png" );
         for( var c in characters ) {
           if( c === "ghost" ) {
             var name = characters[ c ];
@@ -308,6 +333,8 @@
               p.y = p.path[ 0 ].y;
               var rX = gridToRoom( p.x );
               var rY = gridToRoom( p.y );
+              if( isGameEnded ) {
+              }
               if( isGhost ) {
               }
               else if( isBaba ) {
@@ -360,7 +387,7 @@
             }
           }
           // Check for Ghost!
-          if( isGhost ) {
+          if( !isGameEnded && isGhost ) {
             // See if Ghost is touching any other player
             for( var other in players ) {
               var o = players[ other ];
@@ -380,7 +407,7 @@
             }
           }
           // Check for BABA!
-          if( isBaba ) {
+          if( !isGameEnded && isBaba ) {
             // See if BABA is touching any other player
             for( var other in players ) {
               var o = players[ other ];
@@ -620,6 +647,9 @@
               players[ name ].progress = 1;
               nextX = players[ name ].x;
               nextY = players[ name ].y;
+            }
+            if( characters[ character ] ) {
+              players[ name ].character = character;
             }
           }
           else {

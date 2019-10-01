@@ -293,25 +293,29 @@
               p.y = p.path[ 0 ].y;
               var rX = gridToRoom( p.x );
               var rY = gridToRoom( p.y );
-              // Check for prizes
-              for( var i = 0; i < prizes.length; i++ ) {
-                if( prizes[ i ].x === rX && prizes[ i ].y === rY ) {
-                  p.points += prizeValues[ prizes[ i ].type ];
-                  console.log( p.name + " GOT THE PRIZE AND NOW HAS " + p.points + " points!" );
-                  Unicorn.RemoveObject( prizes[ i ].sprite.label );
-                  prizes.splice( i, 1 );
-                  addPrize();
-                  showLeaderboard();
-                }
+              if( isGameEnded ) {
               }
-              for( var i = 0; i < traps.length; i++ ) {
-                if( traps[ i ].x === rX && traps[ i ].y === rY ) {
-                  p.points += prizeValues[ traps[ i ].type ];
-                  console.log( p.name + " HIT A TRAP AND NOW HAS " + p.points + " points!" );
-                  Unicorn.RemoveObject( traps[ i ].sprite.label );
-                  traps.splice( i, 1 );
-                  addTrap();
-                  showLeaderboard();
+              else {
+                // Check for prizes
+                for( var i = 0; i < prizes.length; i++ ) {
+                  if( prizes[ i ].x === rX && prizes[ i ].y === rY ) {
+                    p.points += prizeValues[ prizes[ i ].type ];
+                    console.log( p.name + " GOT THE PRIZE AND NOW HAS " + p.points + " points!" );
+                    Unicorn.RemoveObject( prizes[ i ].sprite.label );
+                    prizes.splice( i, 1 );
+                    addPrize();
+                    showLeaderboard();
+                  }
+                }
+                for( var i = 0; i < traps.length; i++ ) {
+                  if( traps[ i ].x === rX && traps[ i ].y === rY ) {
+                    p.points += prizeValues[ traps[ i ].type ];
+                    console.log( p.name + " HIT A TRAP AND NOW HAS " + p.points + " points!" );
+                    Unicorn.RemoveObject( traps[ i ].sprite.label );
+                    traps.splice( i, 1 );
+                    addTrap();
+                    showLeaderboard();
+                  }
                 }
               }
               Unicorn.SetPosition( p.sprite.label, gridToMap( p.x ), gridToMap( p.y ) );
@@ -494,6 +498,9 @@
               players[ name ].progress = 1;
               nextX = players[ name ].x;
               nextY = players[ name ].y;
+            }
+            if( characters[ character ] ) {
+              players[ name ].character = character;
             }
           }
           else {
