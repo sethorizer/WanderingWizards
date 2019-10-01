@@ -657,7 +657,7 @@
               character = playableCharacters[ Math.floor( playableCharacters.length * Math.random() ) ];
             }
             var sprite = characters[ character ] + "_" + "front1";
-            if( Object.keys( players ).length === 0 ) {
+            if( Object.keys( players ).length === 1 ) {
               setTimeout( () => {
                 let smooth = setInterval( () => {
                   gameStartLogo.alpha -= 0.01;
