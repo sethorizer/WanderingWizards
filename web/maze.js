@@ -33,7 +33,7 @@ function findTheWay( grid, gridWidth, gridHeight, x, y, gX, gY ) {
       next.push( { x: p.x, y: p.y + 1, score: calcScore( p.x, p.y + 1, gX, gY ), path: path } );
       next.push( { x: p.x - 1, y: p.y, score: calcScore( p.x - 1, p.y, gX, gY ), path: path } );
       // Sort next paths
-      next.sort( (a, b) => calcScore( a.x, a.y, gX, gY ) - calcScore( b.x, b.y, gX, gY ) );
+      next.sort( (a, b) => calcScore( a.x, a.y, gX, gY ) - calcScore( b.x, b.y, gX, gY ) + a.path.length - b.path.length );
     }
   }
   return null;
