@@ -1,3 +1,9 @@
+const ghostSpeed = 0.75;
+const tagSpeed = 1.5;
+const playerSpeed = 1;
+const trapCount = 5;
+const prizeCount = 3;
+
 var prizeValues = {
     "root": -5,
     "potion_green": 5,

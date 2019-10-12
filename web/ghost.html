@@ -202,18 +202,6 @@
 
       }
 
-      function truncateString( text, length ) {
-        if( text.length > length ) {
-          return text.substring( 0, length ) + "…";
-        }
-        return text;
-      }
-
-      function showLeaderboard() {
-        var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: truncateString( players[ p ].name, 11 ) }) );
-        scores.sort( (a,b) => b.score - a.score );
-        gameScores.text = scores.map( s => s.name + ": " + s.score ).slice( 0, 14 ).join( "\n" );
-      }
 
     </script>
   </body>

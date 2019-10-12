@@ -17,6 +17,7 @@ class MovingEntity extends GameEntity {
 		this.name = "";
 		this.points = 0;
 		this.path = [];
+		this.progress = 0;
 		this.type = "moving";
 		this.direction = "front";
 		this.sprite = null;  // TODO fix
@@ -25,28 +26,29 @@ class MovingEntity extends GameEntity {
 	update( timestamp, timeDiffInMs ) {
 		// position update
 		if (this.path.length < 2) return;
-		let progress = Math.abs(this.path[ 0 ].x - this.x) + Math.abs(this.path[ 0 ].y - this.y);
 		let deltaProgress = timeDiffInMs / 1000 * this.speed;
-		if (progress + deltaProgress > 1) {  // TODO catch > 2 cases?
-			let deltaMs = timeDiffInMs * (1 - progress) / deltaProgress;
-			this.visitRoom( timestamp, timeDiffInMs, this.path[ 1 ].x, this.path[ 1 ].y);
+		if (this.progress + deltaProgress > 1) {  // TODO catch > 2 cases?
+			let deltaMs = timeDiffInMs * (1 - this.progress) / deltaProgress;
+			this.visitRoom( timestamp, deltaMs, this.path[ 0 ].x, this.path[ 0 ].y);
 
+			this.x = this.path[ 0 ].x;
+			this.y = this.path[ 0 ].y;
 			this.path.shift();
 			this.updateWalkingDirection();
 
-			if (this.path.length <= 1) {
-				progress = 0;
-				this.x = this.path[ 0 ].x;
-				this.y = this.path[ 0 ].y;
-				this.path = [];
+			if (this.path.length === 0) {
+				this.progress = 0;
 			} else {
-				progress += deltaProgress - 1;
+				this.progress += deltaProgress - 1;
 			}
 		}
 
-		if (this.path.length >= 2) {
-			this.x = this.path[ 0 ].x * progress + this.path[ 1 ].x * (1 - progress);
-			this.y = this.path[ 0 ].y * progress + this.path[ 1 ].y * (1 - progress);
+		let cx = this.x;
+		let cy = this.y;
+
+		if (this.path.length > 0 && this.progress > 0) {
+			cx += this.progress * (this.path[ 0 ].x - this.x);
+			cy += this.progress * (this.path[ 0 ].y - this.y);
 		}
 
 		// TODO update sprite position / direction?
@@ -57,16 +59,17 @@ class MovingEntity extends GameEntity {
 	}
 
 	updateWalkingDirection() {
-		let newDeltaX = this.path[ 1 ].x - this.path[ 0 ].x;
-		let newDeltaY = this.path[ 1 ].y - this.path[ 0 ].y;
-		if (newDeltaX > 0) {
-			this.direction = "right";
-		} else if (newDeltaX < 0) {
-			this.direction = "left";
-		} else if (newDeltaY > 0) {
-			this.direction = "front";
-		} else {
-			this.direction = "back";
+		this.direction = "front";
+		if (this.path.length > 0) {
+			let newDeltaX = this.path[ 1 ].x - this.path[ 0 ].x;
+			let newDeltaY = this.path[ 1 ].y - this.path[ 0 ].y;
+			if (newDeltaX > 0) {
+				this.direction = "right";
+			} else if (newDeltaX < 0) {
+				this.direction = "left";
+			} else if (newDeltaY < 0) {
+				this.direction = "back";
+			}
 		}
 	}
 }
@@ -96,6 +99,13 @@ class Game {
 	constructor() {
 		this.map = new GameMap();
 		var map = this.map;
+
+		this.traps = [];
+		this.prizes = [];
+		this.entities = [];
+		this.players = {};
+
+		this.isEnded = false;
 
         Unicorn.Load( "root", "assets/web.png" ); // -5 pts
         Unicorn.Load( "potion_green", "assets/potion_green.png" ); // 5 pts
@@ -195,6 +205,25 @@ class Game {
 	}
 
 	update( timestamp, timeDiffInMs ) {
+		for (entity of this.entities) {
+			entity.update( timestamp, timeDiffInMs );
+		}
+	}
+
+	endGame() {
+		this.isEnded = true;
+
+		scoreboardBG.alpha = 1;
+		endGameSign.alpha = 1;
+		endGameNote.alpha = 1;
+		endGameBG.alpha = 1;
+		gameScores.alpha = 1;
+		// Hide player names
+		for( var player in players ) {
+			var p = players[ player ];
+			p.label.alpha = 0;
+			p.scoreLabel.alpha = 0;
+		}
 	}
 
 	addGhost() {
@@ -213,93 +242,97 @@ class Game {
         // console.log( "TAG!", tagPlayer );
 	}
 
+	newPlayer( name, character ) {
+		if( !characters[ character ] ) {
+			character = playableCharacters[ Math.floor( playableCharacters.length * Math.random() ) ];
+		}
+		var sprite = characters[ character ] + "_" + "front1";
+		if( Object.keys( players ).length === 1 ) {
+			setTimeout( () => {
+				let smooth = setInterval( () => {
+					gameStartLogo.alpha -= 0.01;
+					if( gameStartLogo.alpha <= 0 ) {
+						clearInterval( smooth );
+					}
+				}, 10 );
+			}, 10000 );
+		}
+		nextX = roomToGrid( 10 ); nextY = roomToGrid( 5 );
+		var pSprite = Unicorn.AddObject( "ball" + counter++, {
+			type: "circle",
+			sprite: sprite,
+			x: -1000, y: -1000,
+			radius: 24,
+			isStatic: true
+			} );
+		pSprite.sprite.scale.x = 3;
+		pSprite.sprite.scale.y = 3;
+		players[ name ] = {
+			name: name,
+			isGhost,
+			x: nextX, y: nextY,
+			progress: 1,
+			path: [],
+			points: 0,
+			label: Unicorn.AddText( name, name, -1000, -1000, {
+				fontFamily: 'VT323',
+				fontSize: 36,
+				fontWeight: 'bold',
+				fill: color
+				} ),
+			scoreLabel: Unicorn.AddText( name + "_points", "0", -1000, -1000, {
+				fontFamily: 'VT323',
+				fontSize: 36,
+				fontWeight: 'bold',
+				fill: "#ffffff"
+				} ),
+			sprite: pSprite,
+			character: character,
+			frame: 0,
+			frameTime: 0,
+		};
+	}
+
 	movePlayer( name, coord, color = "#ffffff", character = "" ) {
-        showLeaderboard();
+        updateLeaderboard();
         var isGhost = name === ghostName;
         var x = -1, y = -1;
         if( isCoord( coord ) ) {
-          var c = coordToRoom( coord );
-          x = c.x;
-          y = c.y;
-        }
-        if( x >= 0 && y >= 0 && x < 20 && y < 11 ) {
-          // plotMap( x, y );
-          pathBalls.forEach( x => {
-            Unicorn.RemoveObject( x.label );
-          });
-          pathBalls = [];
+			var c = coordToRoom( coord );
+			x = c.x;
+			y = c.y;
+		}
+		if( x < 0 || y < 0 || x >= 20 || y >= 11) return;
+		// plotMap( x, y );
+		pathBalls.forEach( x => {
+			Unicorn.RemoveObject( x.label );
+		});
+		pathBalls = [];
 
-          var nextX, nextY;
-          if( players[ name ] ) {
-            if( players[ name ].path.length > 0 ) {
-              nextX = players[ name ].path[ 0 ].x;
-              nextY = players[ name ].path[ 0 ].y;
-            }
-            else {
-              players[ name ].progress = 1;
-              nextX = players[ name ].x;
-              nextY = players[ name ].y;
-            }
-            if( characters[ character ] ) {
-              players[ name ].character = character;
-            }
-          }
-          else {
-            if( !characters[ character ] ) {
-              character = playableCharacters[ Math.floor( playableCharacters.length * Math.random() ) ];
-            }
-            var sprite = characters[ character ] + "_" + "front1";
-            if( Object.keys( players ).length === 1 ) {
-              setTimeout( () => {
-                let smooth = setInterval( () => {
-                  gameStartLogo.alpha -= 0.01;
-                  if( gameStartLogo.alpha <= 0 ) {
-                    clearInterval( smooth );
-                  }
-                }, 10 );
-              }, 10000 );
-            }
-            nextX = roomToGrid( 10 ); nextY = roomToGrid( 5 );
-            var pSprite = Unicorn.AddObject( "ball" + counter++, {
-                type: "circle",
-                sprite: sprite,
-                x: -1000, y: -1000,
-                radius: 24,
-                isStatic: true
-              } );
-              pSprite.sprite.scale.x = 3;
-              pSprite.sprite.scale.y = 3;
-            players[ name ] = {
-              name: name,
-              isGhost,
-              x: nextX, y: nextY,
-              progress: 1,
-              path: [],
-              points: 0,
-              label: Unicorn.AddText( name, name, -1000, -1000, {
-                fontFamily: 'VT323',
-                fontSize: 36,
-                fontWeight: 'bold',
-                fill: color
-              } ),
-              scoreLabel: Unicorn.AddText( name + "_points", "0", -1000, -1000, {
-                fontFamily: 'VT323',
-                fontSize: 36,
-                fontWeight: 'bold',
-                fill: "#ffffff"
-              } ),
-              sprite: pSprite,
-              character: character,
-              frame: 0,
-              frameTime: 0,
-            };
-          }
+		if ( !this.players[ name ] ) {
+			this.newPlayer( name, character );
+		}
 
-          var path = findTheWay( maze, 41, 23,
-            nextX, nextY,
-            roomToGrid( x ), roomToGrid( y ) );
-          // console.log( path );
-          players[ name ].path = path;
+		let nextX, nextY;
+
+		if( this.players[ name ].path.length > 0 ) {
+			nextX = this.players[ name ].path[ 0 ].x;
+			nextY = this.players[ name ].path[ 0 ].y;
+		}
+		else {
+			//this.players[ name ].progress = 1;
+			nextX = this.players[ name ].x;
+			nextY = this.players[ name ].y;
+		}
+
+		if( characters[ character ] ) {
+			this.players[ name ].character = character;
+		}
+		this.players[ name ].color = color;
+
+		this.players[ name ].path = findTheWay( maze, 41, 23,
+			nextX, nextY, roomToGrid( x ), roomToGrid( y )
+		);
 
           // path.forEach( (p, i) => {
           //   if( i % 2 === 0 ) {
@@ -312,24 +345,25 @@ class Game {
           //     pathBalls.push( ball );
           //   }
           // });
-		}
 	}
 }
 
 
 class GameMap {
 	constructor() {
+		this.fog = [];
+
         PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
         Unicorn.Load( "map", "assets/floor_g.png" );
-        var map = Unicorn.AddObject( "map", {
+        this.object = Unicorn.AddObject( "map", {
           type: "rectangle",
           x: Math.floor( 1920 / 2 ), y: Math.floor( 1080 / 2 ) - 9,
           width: 1920, height: 1080,
           sprite: "map",
           isStatic: true
         } );
-        map.sprite.scale.x = 3;
-        map.sprite.scale.y = 3;
+        this.object.sprite.scale.x = 3;
+        this.object.sprite.scale.y = 3;
         Unicorn.Load( "glow", "assets/lantern_glow.png" );
         var glows = [
           { x: 6, y: 5 },
@@ -392,7 +426,7 @@ class GameMap {
             if( Math.random() > 0.15 ) {
               f.alpha = 0;
             }
-            fog.push( f );
+            this.fog.push( f );
           }
         }
         setInterval( updateFog, 1000 );
@@ -403,7 +437,7 @@ class GameMap {
 	}
 
 	updateFog() {
-        let f = fog[ Math.floor( Math.random() * fog.length ) ];
+        let f = this.fog[ Math.floor( Math.random() * this.fog.length ) ];
         // if( 8 < x && x < 12 && 3 < y && y < 6 ) {
         //   f.alpha = 0;
         // }
@@ -476,42 +510,6 @@ class GameMap {
 
 
 var counter = 0;
-var isGameEnded = false;
-const ghostSpeed = 0.75;
-const tagSpeed = 1.5;
-const playerSpeed = 1;
-const trapCount = 5;
-const prizeCount = 3;
-var prizeValues = {
-	"root": -5,
-	"potion_green": 5,
-	"potion_pink": 10,
-	"frog": 20,
-	"egg": 30,
-	"goblet": 100,
-	"candycorn": 20,
-	"chocolate": 30,
-	"lifesaver": 25,
-	"green_treat": 5,
-	"pink_treat": 10,
-	"golden_pumpkin": 100,
-}
-var trapRarityBucket = {
-	"root": 30,
-};
-var prizeRarityBucket = {
-	// "potion_green": 50,
-	// "potion_pink": 50,
-	// "frog": 20,
-	// "egg": 10,
-	// "goblet": 1,
-	"candycorn": 25,
-	"chocolate": 10,
-	"lifesaver": 20,
-	"green_treat": 50,
-	"pink_treat": 50,
-	"golden_pumpkin": 1,
-};
 var trapBucket = [];
 var prizeBucket = [];
 Object.keys( trapRarityBucket ).forEach( p => {
@@ -524,28 +522,14 @@ for( var i = 0; i < prizeRarityBucket[ p ]; i++ ) {
 	prizeBucket.push( p );
 }
 });
-var traps = [];
-var prizes = [];
 var fog = [];
-var playableCharacters = [ "vampire", "witch", "zombie", "monster" ];
-var characters = {
-	"vampire": "vampire",
-	"witch": "witch",
-	"zombie": "zombie",
-	"monster": "monster",
-	"ghost": "ghost",
-	"maaya": "maaya",
-	"instafluff": "insta",
-	"avellana": "avelana",
-	"jimmy": "jimmy",
-};
+
 var animations = [ "front", "back", "left", "right" ];
 const ghostName = "*BOO*";
 var prevGhostX = -1, prevGhostY = -1;
 var prevTagX = -1, prevTagY = -1;
 var tagPlayer = null;
 var tagStar;
-var players = {};
 var gameStartLogo;
 var scoreboardBG;
 var endGameBG;
@@ -571,8 +555,21 @@ function plotMap( x, y ) {
 	} );
 }
 
+function truncateString( text, length ) {
+	if( text.length > length ) {
+		return text.substring( 0, length ) + "…";
+	}
+	return text;
+}
+
+function updateLeaderboard() {
+	var scores = Object.keys( players ).map( p => ({ score: players[ p ].points, name: truncateString( players[ p ].name, 11 ) }) );
+	scores.sort( (a,b) => b.score - a.score );
+	gameScores.text = scores.map( s => s.name + ": " + s.score ).slice( 0, 14 ).join( "\n" );
+}
+
 function Init() {
-	var game = new Game();
+	game = new Game();
 }
 
 function Update() {
@@ -581,30 +578,19 @@ function Update() {
 
 function OnChatCommand( user, command, message, flags, extra ) {
 	// Handle Chat Commands
-	if( !isGameEnded && command === "play" ) {
+	if( !game.isEnded && command === "play" ) {
 		var spawnLocations = [ "E10", "E11", "E12", "F10", "F11", "F12" ];
-		movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff", message.toLowerCase() );
+		game.movePlayer( user, spawnLocations[ Math.floor( Math.random() * spawnLocations.length ) ], extra.userColor || "#ffffff", message.toLowerCase() );
 	}
 	if( flags.broadcaster || flags.mod || flags.vip ) {
 		if( command === "starttag" || command === "tag" ) {
-			startTag();
+			game.startTag();
 		}
-		if( !isGameEnded && command === "prize" ) {
-			addPrize();
+		if( !game.isEnded && command === "prize" ) {
+			game.addPrize();
 		}
 		if( command === "end" ) {
-			isGameEnded = true;
-			scoreboardBG.alpha = 1;
-			endGameSign.alpha = 1;
-			endGameNote.alpha = 1;
-			endGameBG.alpha = 1;
-			gameScores.alpha = 1;
-			// Hide player names
-			for( var player in players ) {
-				var p = players[ player ];
-				p.label.alpha = 0;
-				p.scoreLabel.alpha = 0;
-			}
+			game.endGame();
 		}
 		if( command === "reset" ||
 			command === "restart" ) {
@@ -617,8 +603,8 @@ function OnChatMessage( user, message, flags, self, extra ) {
 	// Handle Chat Messages
 	// console.log( message );
 	// console.log( extra.userColor );
-	if( !isGameEnded && isCoord( message ) ) {
-		movePlayer( user, message, extra.userColor || "#ffffff" );
+	if( !game.isEnded && isCoord( message ) ) {
+		game.movePlayer( user, message, extra.userColor || "#ffffff" );
 	}
 }
 
